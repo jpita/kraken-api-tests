@@ -1,0 +1,53 @@
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Nightly: contract drift and feed regressions ship on Kraken's schedule, not ours.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint & typecheck
+        run: |
+          npm run lint
+          npm run typecheck
+
+      # No `npx playwright install` — the suite is pure API (APIRequestContext + ws),
+      # no browsers needed.
+      - name: Run test suite against live Kraken API
+        run: npx playwright test
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      # Flake policy (TEST_PLAN.md §6): retried tests are recorded, never hidden.
+      - name: Upload flake report (if any test needed a retry)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flake-report
+          path: flake-report.json
+          if-no-files-found: ignore
+          retention-days: 30
