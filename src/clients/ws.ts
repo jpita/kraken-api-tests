@@ -128,7 +128,10 @@ export class KrakenWs {
     const reqId = Math.floor(Math.random() * 1_000_000_000);
     const since = this.mark();
     this.send({ method, params, req_id: reqId });
-    const ack = await this.next((m) => m['method'] === method && m['req_id'] === reqId, {
+    // Match on req_id only: Kraken labels some rejection acks with the wrong
+    // method (observed: unsubscribe errors echo method "subscribe" —
+    // TEST_PLAN.md §7), and a mislabeled ack should fail fast, not time out.
+    const ack = await this.next((m) => typeof m['method'] === 'string' && m['req_id'] === reqId, {
       since,
       description: `${method} ack (req_id ${reqId})`,
     });

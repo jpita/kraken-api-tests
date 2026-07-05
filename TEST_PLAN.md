@@ -109,7 +109,24 @@ around them would erase the signal.
 - **REST prices are strings, WS v2 prices are JSON numbers.** Same market, two serialisations.
   Contract schemas encode each faithfully instead of coercing, so a drift in either direction
   is caught.
-- _(section grows as the suite runs — see git history)_
+- **WS v2 `connection_id` exceeds `Number.MAX_SAFE_INTEGER`.** The status message carries
+  e.g. `7098588125890560000` (> 2^53), which silently loses precision in every standard JS
+  JSON parser. Harmless as an opaque label, but any client using it as an exact key needs a
+  bigint-aware parser.
+- **`event_trigger` is part of a ticker subscription's identity.** Subscribing with
+  `event_trigger: "bbo"` and unsubscribing without repeating it is rejected with
+  `"Subscription Not Found"` — the docs don't call out that unsubscribe params must match
+  the subscribe params field-for-field.
+- **Unsubscribe rejection acks echo the wrong method.** The error ack for the rejected
+  unsubscribe above comes back as `{"method": "subscribe", "error": "Subscription Not
+Found", ...}` — labelled `subscribe` despite answering an `unsubscribe` request (observed
+  live 2026-07-05, v2.0.10). A client correlating acks by `(method, req_id)` deadlocks on
+  this; the suite's WS client correlates by `req_id` alone for exactly this reason.
+- **REST `Depth` pads prices beyond the pair's precision.** A `pair_decimals: 1` pair
+  returns `"62655.40000"` (5 decimals — matching `cost_decimals`, not `pair_decimals`).
+  The precision-conformance test therefore counts _significant_ decimals.
+- **`last` cursors are inconsistently typed across endpoints:** numeric in `OHLC`/`Spread`,
+  a nanosecond string in `Trades`. Schemas pin each faithfully.
 
 ## 8. Cross-source tolerance reasoning
 

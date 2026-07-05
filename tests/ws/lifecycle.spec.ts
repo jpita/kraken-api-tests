@@ -11,9 +11,11 @@ test.describe('WS subscription lifecycle', () => {
       await ws.subscribe({ channel: 'ticker', symbol: ['BTC/USD'], event_trigger: 'bbo' });
       await ws.next(isTicker, { description: 'ticker message while subscribed' });
 
+      // event_trigger must be repeated: it is part of the subscription identity,
+      // and omitting it gets "Subscription Not Found" (TEST_PLAN.md §7).
       const ack = parseOrFail(
         WsSubscribeAck,
-        await ws.unsubscribe({ channel: 'ticker', symbol: ['BTC/USD'] }),
+        await ws.unsubscribe({ channel: 'ticker', symbol: ['BTC/USD'], event_trigger: 'bbo' }),
         'unsubscribe ack',
       );
       expect(ack.method).toBe('unsubscribe');
