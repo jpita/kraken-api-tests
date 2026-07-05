@@ -27,7 +27,12 @@ export class KrakenWs {
     const client = new KrakenWs(socket);
     socket.on('message', (raw: WebSocket.RawData) => {
       // Non-JSON frames would be a protocol violation worth surfacing loudly.
-      const msg = JSON.parse(raw.toString()) as WsMessage;
+      const text = Array.isArray(raw)
+        ? Buffer.concat(raw).toString('utf8')
+        : Buffer.isBuffer(raw)
+          ? raw.toString('utf8')
+          : Buffer.from(raw).toString('utf8');
+      const msg = JSON.parse(text) as WsMessage;
       client.buffer.push(msg);
       for (const waiter of [...client.waiters]) {
         if (waiter.predicate(msg)) waiter.onMatch(msg);
@@ -136,7 +141,9 @@ export class KrakenWs {
   async close(): Promise<void> {
     if (this.socket.readyState === WebSocket.CLOSED) return;
     await new Promise<void>((resolve) => {
-      this.socket.once('close', () => resolve());
+      this.socket.once('close', () => {
+        resolve();
+      });
       this.socket.close();
     });
   }

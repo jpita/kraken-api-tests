@@ -60,7 +60,7 @@ export async function publicGet(
   params?: Record<string, string | number>,
 ): Promise<unknown> {
   return throttled(async () => {
-    const response = await request.get(`${BASE_URL}/${endpoint}`, { params });
+    const response = await request.get(`${BASE_URL}/${endpoint}`, params ? { params } : {});
     if (!response.ok()) throw new KrakenHttpError(endpoint, response.status());
     const body: unknown = await response.json();
     const errors = (body as { error?: unknown }).error;

@@ -10,11 +10,7 @@ export default defineConfig({
   workers: 1,
   fullyParallel: false,
   timeout: 60_000,
-  reporter: [
-    ['list'],
-    ['html', { open: 'never' }],
-    ['./src/reporting/flake-reporter.ts'],
-  ],
+  reporter: [['list'], ['html', { open: 'never' }], ['./src/reporting/flake-reporter.ts']],
   projects: [
     { name: 'rest', testDir: './tests/rest' },
     { name: 'contract', testDir: './tests/contract' },

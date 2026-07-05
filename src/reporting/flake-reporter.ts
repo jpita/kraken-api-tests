@@ -31,6 +31,8 @@ export default class FlakeReporter implements Reporter {
   onEnd(): void {
     if (this.flaky.length === 0) return;
     writeFileSync('flake-report.json', JSON.stringify(this.flaky, null, 2));
-    console.log(`\n[flake-reporter] ${this.flaky.length} test(s) needed a retry — see flake-report.json`);
+    console.log(
+      `\n[flake-reporter] ${this.flaky.length} test(s) needed a retry — see flake-report.json`,
+    );
   }
 }

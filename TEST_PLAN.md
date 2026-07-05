@@ -8,12 +8,12 @@ portfolio for the Sr. QA Automation Engineer — Pro role.
 
 ### In scope (v1)
 
-| Area | Surface | What is verified |
-|---|---|---|
-| REST market data | `SystemStatus`, `AssetPairs`, `Ticker`, `Depth`, `OHLC`, `Trades`, `Spread` | Domain invariants a trader relies on (see §2) |
-| Contract | Every REST response + every WS v2 message type | Zod `safeParse` — schema drift fails with the exact offending field path |
-| WebSocket v2 | `ticker`, `book` (depth 10), `heartbeat`, subscribe/unsubscribe lifecycle | Live stream behaviour, CRC32 book checksum, clean teardown |
-| Cross-source | REST Ticker ↔ WS ticker, REST Depth ↔ WS book snapshot | The two data paths describe the same market |
+| Area             | Surface                                                                     | What is verified                                                         |
+| ---------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| REST market data | `SystemStatus`, `AssetPairs`, `Ticker`, `Depth`, `OHLC`, `Trades`, `Spread` | Domain invariants a trader relies on (see §2)                            |
+| Contract         | Every REST response + every WS v2 message type                              | Zod `safeParse` — schema drift fails with the exact offending field path |
+| WebSocket v2     | `ticker`, `book` (depth 10), `heartbeat`, subscribe/unsubscribe lifecycle   | Live stream behaviour, CRC32 book checksum, clean teardown               |
+| Cross-source     | REST Ticker ↔ WS ticker, REST Depth ↔ WS book snapshot                      | The two data paths describe the same market                              |
 
 Pairs under test: **XBT/USD, ETH/USD, XBT/EUR** — the two deepest books plus one non-USD
 quote to catch currency-specific precision bugs.
@@ -33,15 +33,15 @@ quote to catch currency-specific precision bugs.
 
 Ordered by potential damage. Each risk maps to at least one automated check.
 
-| # | Risk | Trader impact | Covering tests |
-|---|---|---|---|
-| 1 | **Crossed book** (best bid ≥ best ask) | Signals feed corruption; algos that trust it will "arbitrage" phantom liquidity and get filled at real, worse prices | `rest/depth` bid<ask, `ws/book` invariants, `cross/` top-of-book |
-| 2 | **Stale data** (stream silently stops, REST serves old snapshot) | Trader prices orders off a dead market; stop-losses fire late or never | `ws/ticker` ≥3 updates in 30 s, `ws/heartbeat` cadence, timestamp monotonicity in `Trades`/`OHLC` |
-| 3 | **Book desync** (missed/misapplied delta) | Client-side book diverges from the matching engine — the trader sees liquidity that is not there | `ws/book` CRC32 checksum after every applied update (flagship test) |
-| 4 | **Schema drift** (field renamed, type changed, enum widened) | Parsers crash or, worse, silently mis-parse — `price` as string vs number changes rounding paths | entire `contract/` project |
-| 5 | **Precision / decimals errors** (price or lot decimals disagree with `AssetPairs` metadata) | Rounding at the wrong decimal = mispriced orders; on XBT/EUR a 1-decimal price rounded to 0 decimals is a whole euro | `rest/depth` decimals-conform check, `rest/asset-pairs` metadata presence |
-| 6 | **Self-inconsistent candles/trades** (OHLC where low > open, trade sides outside {b,s}) | Backtests and charting silently corrupt | `rest/ohlc`, `rest/trades` |
-| 7 | **REST vs WS divergence** | Trader charts off REST, executes off WS — decisions made on one market, filled on another | `cross/` project |
+| #   | Risk                                                                                        | Trader impact                                                                                                        | Covering tests                                                                                    |
+| --- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 1   | **Crossed book** (best bid ≥ best ask)                                                      | Signals feed corruption; algos that trust it will "arbitrage" phantom liquidity and get filled at real, worse prices | `rest/depth` bid<ask, `ws/book` invariants, `cross/` top-of-book                                  |
+| 2   | **Stale data** (stream silently stops, REST serves old snapshot)                            | Trader prices orders off a dead market; stop-losses fire late or never                                               | `ws/ticker` ≥3 updates in 30 s, `ws/heartbeat` cadence, timestamp monotonicity in `Trades`/`OHLC` |
+| 3   | **Book desync** (missed/misapplied delta)                                                   | Client-side book diverges from the matching engine — the trader sees liquidity that is not there                     | `ws/book` CRC32 checksum after every applied update (flagship test)                               |
+| 4   | **Schema drift** (field renamed, type changed, enum widened)                                | Parsers crash or, worse, silently mis-parse — `price` as string vs number changes rounding paths                     | entire `contract/` project                                                                        |
+| 5   | **Precision / decimals errors** (price or lot decimals disagree with `AssetPairs` metadata) | Rounding at the wrong decimal = mispriced orders; on XBT/EUR a 1-decimal price rounded to 0 decimals is a whole euro | `rest/depth` decimals-conform check, `rest/asset-pairs` metadata presence                         |
+| 6   | **Self-inconsistent candles/trades** (OHLC where low > open, trade sides outside {b,s})     | Backtests and charting silently corrupt                                                                              | `rest/ohlc`, `rest/trades`                                                                        |
+| 7   | **REST vs WS divergence**                                                                   | Trader charts off REST, executes off WS — decisions made on one market, filled on another                            | `cross/` project                                                                                  |
 
 ## 3. Manual vs automated split
 
@@ -54,17 +54,17 @@ nightly, because API regressions ship on Kraken's schedule, not ours.
 - Documentation accuracy review (docs vs observed behaviour → logged in §7 below).
 - Behaviour during real market events (halts, upgrades, extreme volatility) — not
   reproducible on demand; observe and convert findings into new invariants.
-- Rate-limit *boundary* probing — intentionally tripping HTTP 429 on a shared public API is
+- Rate-limit _boundary_ probing — intentionally tripping HTTP 429 on a shared public API is
   abusive from CI; verified once manually, guarded client-side thereafter.
 - New-endpoint reconnaissance before automating (shape, timing, flakiness of the real feed).
 
 ## 4. Environments
 
-| Env | Value |
-|---|---|
-| REST | `https://api.kraken.com/0/public` (production — Kraken has no public sandbox for spot market data) |
-| WS | `wss://ws.kraken.com/v2` (production) |
-| Runner | Node ≥ 20, Playwright Test; local dev + GitHub Actions `ubuntu-latest` |
+| Env    | Value                                                                                               |
+| ------ | --------------------------------------------------------------------------------------------------- |
+| REST   | `https://api.kraken.com/0/public` (production — Kraken has no public sandbox for spot market data)  |
+| WS     | `wss://ws.kraken.com/v2` (production)                                                               |
+| Runner | Node ≥ 20, Playwright Test; local dev + GitHub Actions `ubuntu-latest`                              |
 | Config | No secrets, no `.env` required. `npm ci && npx playwright test` from a fresh clone is the contract. |
 
 Testing against production public endpoints is safe here because every call is read-only and
@@ -109,7 +109,7 @@ around them would erase the signal.
 - **REST prices are strings, WS v2 prices are JSON numbers.** Same market, two serialisations.
   Contract schemas encode each faithfully instead of coercing, so a drift in either direction
   is caught.
-- *(section grows as the suite runs — see git history)*
+- _(section grows as the suite runs — see git history)_
 
 ## 8. Cross-source tolerance reasoning
 
