@@ -4,9 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
-  schedule:
-    # Nightly: contract drift and feed regressions ship on Kraken's schedule, not ours.
-    - cron: '17 3 * * *'
+  # No cron: this is a portfolio repo, not an operated service — drift detection
+  # on demand via workflow_dispatch instead of burning runner minutes forever.
   workflow_dispatch:
 
 jobs:

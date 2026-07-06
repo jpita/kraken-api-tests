@@ -33,9 +33,10 @@ npx playwright show-report     # HTML report
 
 Requires Node ≥ 20. No browsers, no `.env`, nothing to configure — a fresh clone runs.
 
-CI runs the suite on every PR and nightly (drift ships on Kraken's schedule, not ours),
-uploading the HTML report and — if any test needed a retry — a `flake-report.json`
-artifact, per the flake policy in [TEST_PLAN.md §6](TEST_PLAN.md).
+CI runs the suite on every PR/push and on demand (`workflow_dispatch` — in a team setting
+this would be a nightly cron, since drift ships on Kraken's schedule, not ours), uploading
+the HTML report and — if any test needed a retry — a `flake-report.json` artifact, per the
+flake policy in [TEST_PLAN.md §6](TEST_PLAN.md).
 
 ## What I'd test next with private-endpoint access
 

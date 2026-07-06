@@ -46,8 +46,10 @@ Ordered by potential damage. Each risk maps to at least one automated check.
 ## 3. Manual vs automated split
 
 **Automated (this repo):** everything deterministic and machine-checkable — invariants,
-schemas, stream liveness, checksum math, cross-source consistency. These run on every PR and
-nightly, because API regressions ship on Kraken's schedule, not ours.
+schemas, stream liveness, checksum math, cross-source consistency. These run on every
+PR/push and on demand; in a team setting they'd also run on a nightly cron, because API
+regressions ship on Kraken's schedule, not ours (disabled here — portfolio repo, no
+operator watching nightly reds).
 
 **Manual / exploratory (deliberately not automated):**
 
